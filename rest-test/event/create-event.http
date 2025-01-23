@@ -1,0 +1,9 @@
+POST http://localhost:8080/event
+content-type: application/json
+
+{
+    "name": "Linkin Park Show",
+    "description": "...",
+    "location": "Allianz Parque",
+    "dateTime": "2024-11-15T19:00:00.000Z"
+}
