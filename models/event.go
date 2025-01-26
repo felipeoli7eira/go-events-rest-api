@@ -85,3 +85,17 @@ func GetEvent(id int64) (*Event, error) {
 
 	return &e, nil
 }
+
+func (e *Event) Update() error {
+	preparedStatement, err := db.Database.Prepare("UPDATE events SET name = ?, description = ?, location = ?, date_time = ?, user_id = ? WHERE id = ?")
+
+	if err != nil {
+		return err
+	}
+
+	defer preparedStatement.Close()
+
+	_, err = preparedStatement.Exec(e.Name, e.Description, e.Location, e.DateTime, e.UserID, e.ID)
+
+	return err
+}
