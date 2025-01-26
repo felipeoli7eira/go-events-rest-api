@@ -2,10 +2,12 @@ package main
 
 import (
 	"net/http"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
 
 	"github.com/felipeoli7eira/go-events-rest-api/db"
 	"github.com/felipeoli7eira/go-events-rest-api/models"
-	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -14,9 +16,36 @@ func main() {
 	db.Bootstrap()
 
 	app.GET("/events", listEventsHandler)
+	app.GET("/event/:id", getEvent)
 	app.POST("/event", saveEventHandler)
 
 	app.Run(":8080")
+}
+
+func getEvent(gc *gin.Context) {
+	id, err := strconv.ParseInt(gc.Param("id"), 10, 64)
+
+	if err != nil {
+		gc.JSON(http.StatusBadRequest, map[string]string {
+			"error_message": "Invalid id",
+			"tecnical_error": err.Error(),
+		})
+		return
+	}
+
+	event, err := models.GetEvent(id)
+
+	if err != nil {
+		gc.JSON(http.StatusInternalServerError, map[string]string {
+			"error_message": "Could not fetch event",
+			"tecnical_error": err.Error(),
+		})
+		return
+	}
+
+	gc.JSON(http.StatusInternalServerError, map[string]*models.Event {
+		"data": event,
+	})
 }
 
 func listEventsHandler(gc *gin.Context) {
