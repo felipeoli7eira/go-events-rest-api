@@ -130,3 +130,39 @@ func updateEventHandler(gc *gin.Context) {
 		"updated":updatedEvent,
 	})
 }
+
+func deleteEventHandler(gc *gin.Context) {
+	parsedId, err := strconv.ParseInt(gc.Param("id"), 10, 64)
+
+	if err != nil {
+		gc.JSON(http.StatusBadRequest, map[string]string {
+			"error_message": "Invalid event id",
+			"tecnical_error": err.Error(),
+		})
+		return
+	}
+
+	event, err := models.GetEvent(parsedId)
+
+	if err != nil {
+		gc.JSON(http.StatusInternalServerError, map[string]string {
+			"error_message": "Could not fetch event",
+			"tecnical_error": err.Error(),
+		})
+		return
+	}
+
+	err = event.Delete()
+
+	if err != nil {
+		gc.JSON(http.StatusInternalServerError, map[string]string {
+			"tecnical_error": err.Error(),
+			"error_message": "Failed to delete event",
+		})
+		return
+	}
+
+	gc.JSON(http.StatusOK, map[string]string {
+		"message": "Event deleted successfully",
+	})
+}
