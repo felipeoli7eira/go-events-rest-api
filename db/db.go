@@ -10,7 +10,7 @@ import (
 var Database *sql.DB
 
 func Bootstrap() {
-	connection, err := sql.Open("sqlite3", "events_database.db")
+	connection, err := sql.Open("sqlite3", "database.db")
 
 	if err != nil {
 		panic("Failed to connect to database")
@@ -25,9 +25,15 @@ func Bootstrap() {
 }
 
 func createTables() {
-	eventsTable := getEventStructTable()
+	_, err := Database.Exec(getUsersStructTable())
 
-	_, err := Database.Exec(eventsTable)
+	if err != nil {
+		panic("Failed to create users table: " + err.Error())
+	}
+
+	fmt.Println(">> Users table created or already exists.")
+
+	_, err = Database.Exec(getEventStructTable())
 
 	if err != nil {
 		panic("Failed to create events table")
@@ -44,7 +50,19 @@ func getEventStructTable() string {
 			description TEXT NOT NULL,
 			location TEXT NOT NULL,
 			date_time DATETIME NOT NULL,
-			user_id INTEGER NOT NULL
+			user_id INTEGER NOT NULL,
+			FOREIGN KEY (user_id) REFERENCES users(id)
+		)
+	`
+}
+
+func getUsersStructTable() string {
+	return `
+		CREATE TABLE IF NOT EXISTS users (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL,
+			email TEXT NOT NULL UNIQUE,
+			password TEXT NOT NULL
 		)
 	`
 }
