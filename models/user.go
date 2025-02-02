@@ -1,13 +1,16 @@
 package models
 
 import (
+	"errors"
+
+	"github.com/felipeoli7eira/go-events-rest-api/utils"
 	"github.com/felipeoli7eira/go-events-rest-api/db"
 )
 
 type User struct {
 	ID 		 int64
 	Name 	 string `binding:"required"`
-	email	 string `binding:"required"`
+	Email	 string `binding:"required"`
 	Password string `binding:"required"`
 }
 
@@ -20,7 +23,15 @@ func (u User) Save() error {
 
 	defer stmt.Close()
 
-	result, err := stmt.Exec(u.Name, u.email, u.Password)
+	hashedPassword, err := utils.HashPlainText(u.Password)
+
+	if err != nil {
+		return err
+	}
+
+	u.Password = hashedPassword
+
+	result, err := stmt.Exec(u.Name, u.Email, u.Password)
 
 	if err != nil {
 		return err
@@ -33,6 +44,25 @@ func (u User) Save() error {
 	}
 
 	u.ID = lastInsertId
+
+	return nil
+}
+
+func (u User) ValidateCredentials() error {
+	row := db.Database.QueryRow("SELECT password FROM users WHERE email = ?", u.Email)
+
+	var retrievedPassword string
+	err := row.Scan(&retrievedPassword)
+
+	if err != nil {
+		return errors.New("Invalid credentials")
+	}
+
+	passwordMatch := utils.PlainTextAndHashMatch(retrievedPassword, u.Password)
+
+	if !passwordMatch {
+		return errors.New("Invalid credentials")
+	}
 
 	return nil
 }
