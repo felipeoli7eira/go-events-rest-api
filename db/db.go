@@ -13,7 +13,7 @@ func Bootstrap() {
 	connection, err := sql.Open("sqlite3", "database.db")
 
 	if err != nil {
-		panic("Failed to connect to database")
+		panic("Failed to open database connection")
 	}
 
 	connection.SetMaxOpenConns(10)
