@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/felipeoli7eira/go-events-rest-api/models"
+	"github.com/felipeoli7eira/go-events-rest-api/utils"
 )
 
 func signUp(gc *gin.Context) {
@@ -14,8 +15,8 @@ func signUp(gc *gin.Context) {
 	err := gc.ShouldBindJSON(&user)
 
 	if err != nil {
-		gc.JSON(http.StatusBadRequest, map[string]string {
-			"error_message": "Invalid request body",
+		gc.JSON(http.StatusBadRequest, map[string]string{
+			"error_message":  "Invalid request body",
 			"tecnical_error": err.Error(),
 		})
 		return
@@ -24,14 +25,14 @@ func signUp(gc *gin.Context) {
 	err = user.Save()
 
 	if err != nil {
-		gc.JSON(http.StatusInternalServerError, map[string]string {
-			"error_message": "Could not save user",
+		gc.JSON(http.StatusInternalServerError, map[string]string{
+			"error_message":  "Could not save user",
 			"tecnical_error": err.Error(),
 		})
 		return
 	}
 
-	gc.JSON(http.StatusCreated, map[string]string {
+	gc.JSON(http.StatusCreated, map[string]string{
 		"message": "User created successfully",
 	})
 }
@@ -42,8 +43,8 @@ func logIn(gc *gin.Context) {
 	err := gc.ShouldBindJSON(&user)
 
 	if err != nil {
-		gc.JSON(http.StatusBadRequest, map[string]string {
-			"error_message": "Invalid request body",
+		gc.JSON(http.StatusBadRequest, map[string]string{
+			"error_message":  "Invalid request body",
 			"tecnical_error": err.Error(),
 		})
 		return
@@ -52,15 +53,25 @@ func logIn(gc *gin.Context) {
 	err = user.ValidateCredentials()
 
 	if err != nil {
-		gc.JSON(http.StatusUnauthorized, map[string]string {
-			"error_message": "Invalid credentials",
+		gc.JSON(http.StatusUnauthorized, map[string]string{
+			"error_message":  "Invalid credentials",
 			"tecnical_error": err.Error(),
 		})
 		return
 	}
 
-	gc.JSON(http.StatusOK, map[string]string {
+	userToken, err := utils.GenerateJWT(user.Email, user.ID)
+
+	if err != nil {
+		gc.JSON(http.StatusInternalServerError, map[string]string{
+			"error_message":  "Could not generate token",
+			"tecnical_error": err.Error(),
+		})
+		return
+	}
+
+	gc.JSON(http.StatusOK, map[string]string{
 		"message": "Login successful",
-		"token": "...",
+		"token":   userToken,
 	})
 }
